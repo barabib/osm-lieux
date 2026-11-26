@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="banc">
+<node id="1" version="1" lat="45.7000000" lon="4.8000000"><tag k="amenity" v="restaurant"/><tag k="name" v="Chez Paul"/><tag k="website" v="https://chezpaul.fr"/><tag k="addr:postcode" v="69002"/><tag k="addr:city" v="Lyon"/></node>
+<node id="2" version="1" lat="45.7100000" lon="4.8100000"><tag k="amenity" v="bar"/><tag k="name" v="Sans contact"/></node>
+<node id="3" version="1" lat="45.8000000" lon="4.3000000"><tag k="amenity" v="cafe"/><tag k="name" v="Le&#9;Zinc"/><tag k="contact:email" v="contact@lezinc.fr"/></node>
+<node id="4" version="1" lat="45.8100000" lon="4.3100000"><tag k="shop" v="supermarket"/><tag k="name" v="Hyper"/><tag k="website" v="https://hyper.fr"/></node>
+<node id="5" version="1" lat="50.0000000" lon="10.0000000"><tag k="amenity" v="restaurant"/><tag k="name" v="Ailleurs"/><tag k="url" v="https://ailleurs.de"/></node>
+<node id="6" version="1" lat="45.9000000" lon="4.2000000"><tag k="craft" v="winery"/><tag k="name" v="Domaine du Test"/><tag k="website" v="https://domaine.fr;https://autre.fr"/><tag k="ref:FR:SIRET" v="12345678900011"/><tag k="addr:postcode" v="69400"/></node>
+<node id="7" version="1" lat="41.9000000" lon="8.7000000"><tag k="amenity" v="restaurant"/><tag k="name" v="Corse"/><tag k="website" v="https://corse.fr"/></node>
+<node id="1001" version="1" lat="46.0000000" lon="5.0000000"></node>
+<node id="1002" version="1" lat="46.0000000" lon="5.5000000"></node>
+<node id="1003" version="1" lat="46.5000000" lon="5.5000000"></node>
+<node id="1004" version="1" lat="46.5000000" lon="5.0000000"></node>
+<node id="1005" version="1" lat="45.5000000" lon="4.0000000"></node>
+<node id="1006" version="1" lat="45.5000000" lon="4.5000000"></node>
+<node id="1007" version="1" lat="46.0000000" lon="4.5000000"></node>
+<node id="1008" version="1" lat="46.0000000" lon="4.0000000"></node>
+<node id="1009" version="1" lat="45.5000000" lon="4.5000000"></node>
+<node id="1010" version="1" lat="45.5000000" lon="5.0000000"></node>
+<node id="1011" version="1" lat="46.0000000" lon="5.0000000"></node>
+<node id="1012" version="1" lat="46.0000000" lon="4.5000000"></node>
+<node id="1013" version="1" lat="41.5000000" lon="8.5000000"></node>
+<node id="1014" version="1" lat="41.5000000" lon="9.0000000"></node>
+<node id="1015" version="1" lat="42.0000000" lon="9.0000000"></node>
+<node id="1016" version="1" lat="42.0000000" lon="8.5000000"></node>
+<node id="1017" version="1" lat="45.0000000" lon="3.5000000"></node>
+<node id="1018" version="1" lat="45.0000000" lon="6.0000000"></node>
+<node id="1019" version="1" lat="47.0000000" lon="6.0000000"></node>
+<node id="1020" version="1" lat="47.0000000" lon="3.5000000"></node>
+<node id="1021" version="1" lat="46.1000000" lon="5.1000000"></node>
+<node id="1022" version="1" lat="46.1000000" lon="5.2000000"></node>
+<node id="1023" version="1" lat="46.2000000" lon="5.2000000"></node>
+<node id="1024" version="1" lat="46.2000000" lon="5.1000000"></node>
+<node id="1025" version="1" lat="45.6000000" lon="4.1000000"></node>
+<node id="1026" version="1" lat="45.6000000" lon="4.2000000"></node>
+<node id="1027" version="1" lat="45.7000000" lon="4.2000000"></node>
+<node id="1028" version="1" lat="45.7000000" lon="4.1000000"></node>
+<way id="10" version="1"><nd ref="1021"/><nd ref="1022"/><nd ref="1023"/><nd ref="1024"/><nd ref="1021"/><tag k="tourism" v="hotel"/><tag k="name" v="Hôtel des Bois"/><tag k="email" v="info@hotel.fr"/><tag k="building" v="yes"/></way>
+<way id="21" version="1"><nd ref="1025"/><nd ref="1026"/><nd ref="1027"/><nd ref="1028"/><nd ref="1025"/></way>
+<way id="501" version="1"><nd ref="1001"/><nd ref="1002"/><nd ref="1003"/><nd ref="1004"/><nd ref="1001"/></way>
+<way id="502" version="1"><nd ref="1005"/><nd ref="1006"/><nd ref="1007"/><nd ref="1008"/><nd ref="1005"/></way>
+<way id="503" version="1"><nd ref="1009"/><nd ref="1010"/><nd ref="1011"/><nd ref="1012"/><nd ref="1009"/></way>
+<way id="504" version="1"><nd ref="1013"/><nd ref="1014"/><nd ref="1015"/><nd ref="1016"/><nd ref="1013"/></way>
+<way id="505" version="1"><nd ref="1017"/><nd ref="1018"/><nd ref="1019"/><nd ref="1020"/><nd ref="1017"/></way>
+<relation id="20" version="1"><member type="way" ref="21" role="outer"/><tag k="type" v="multipolygon"/><tag k="amenity" v="restaurant"/><tag k="name" v="Grand Resto"/><tag k="website" v="https://grandresto.fr"/></relation>
+<relation id="601" version="1"><member type="way" ref="501" role="outer"/><tag k="type" v="boundary"/><tag k="boundary" v="administrative"/><tag k="admin_level" v="6"/><tag k="ref:INSEE" v="01"/><tag k="name" v="Ain"/></relation>
+<relation id="602" version="1"><member type="way" ref="502" role="outer"/><tag k="type" v="boundary"/><tag k="boundary" v="administrative"/><tag k="admin_level" v="6"/><tag k="ref:INSEE" v="69D"/><tag k="name" v="Rhône"/></relation>
+<relation id="603" version="1"><member type="way" ref="503" role="outer"/><tag k="type" v="boundary"/><tag k="boundary" v="administrative"/><tag k="admin_level" v="6"/><tag k="ISO3166-2" v="FR-69M"/><tag k="name" v="Métropole de Lyon"/></relation>
+<relation id="604" version="1"><member type="way" ref="504" role="outer"/><tag k="type" v="boundary"/><tag k="boundary" v="administrative"/><tag k="admin_level" v="6"/><tag k="ref:INSEE" v="2A"/><tag k="name" v="Corse-du-Sud"/></relation>
+<relation id="605" version="1"><member type="way" ref="505" role="outer"/><tag k="type" v="boundary"/><tag k="boundary" v="administrative"/><tag k="admin_level" v="4"/><tag k="ref:INSEE" v="84"/><tag k="name" v="Auvergne-Rhône-Alpes"/></relation>
+</osm>

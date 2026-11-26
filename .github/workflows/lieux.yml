@@ -1,0 +1,111 @@
+name: Lieux OSM par département
+
+# Une fois par mois (le 2, 03:41 UTC) et à la main (Actions > Lieux OSM par département > Run workflow).
+on:
+  schedule:
+    - cron: "41 3 2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lieux
+  cancel-in-progress: false
+
+jobs:
+  lieux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    env:
+      SOURCE: https://download.geofabrik.de/europe/france-latest.osm.pbf
+      AGENT: "barabib-osm-lieux/1.0 (+https://github.com/barabib/osm-lieux)"
+      # Mêmes cibles que derf_prospect (DerfProspectWeb::query) + limites des départements. Une seule ligne : relue par banc/banc.sh.
+      FILTRE: "nwr/amenity=restaurant,bar,cafe,pub,fast_food,biergarten,nightclub,food_court,events_venue,canteen nwr/tourism=hotel,motel,guest_house,hostel,chalet,camp_site,caravan_site,apartment,alpine_hut,wine_cellar nwr/shop=wine,alcohol,beverages,deli,convenience,farm,cheese,general,greengrocer,food,zero_waste,bulk nwr/craft=caterer,winery,brewery,distillery r/admin_level=6"
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Outils
+        run: |
+          echo "T0=$(date +%s)" >> "$GITHUB_ENV"
+          sudo apt-get update -q
+          sudo apt-get install -y -q osmium-tool
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install -q osmium==4.3.2 shapely==2.2.0
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+          osmium --version | head -1
+          df -h "$GITHUB_WORKSPACE" | tail -1
+          free -m | sed -n 2p
+
+      - name: Banc (hors ligne)
+        run: bash banc/banc.sh
+
+      - name: Téléchargement Geofabrik
+        working-directory: ${{ runner.temp }}
+        run: |
+          T=$(date +%s)
+          curl -fsSL --retry 3 --retry-delay 60 -A "$AGENT" -o france-latest.osm.pbf.md5 "$SOURCE.md5"
+          curl -fsSL --retry 3 --retry-delay 60 -A "$AGENT" -o france-latest.osm.pbf "$SOURCE"
+          md5sum -c france-latest.osm.pbf.md5
+          echo "PBF_OCTETS=$(stat -c %s france-latest.osm.pbf)" >> "$GITHUB_ENV"
+          echo "EXTRAIT=$(osmium fileinfo -g header.option.osmosis_replication_timestamp france-latest.osm.pbf)" >> "$GITHUB_ENV"
+          echo "D_TELECHARGEMENT=$(( $(date +%s) - T ))" >> "$GITHUB_ENV"
+          df -h . | tail -1
+
+      - name: Filtre osmium
+        working-directory: ${{ runner.temp }}
+        run: |
+          T=$(date +%s)
+          # shellcheck disable=SC2086
+          osmium tags-filter france-latest.osm.pbf $FILTRE -o lieux.pbf
+          rm -f france-latest.osm.pbf
+          ls -l lieux.pbf
+          echo "D_FILTRE=$(( $(date +%s) - T ))" >> "$GITHUB_ENV"
+
+      - name: Lieux par département
+        run: |
+          T=$(date +%s)
+          python3 -I scripts/extraire.py "$RUNNER_TEMP/lieux.pbf" "$RUNNER_TEMP/out" "$EXTRAIT"
+          echo "D_EXTRACTION=$(( $(date +%s) - T ))" >> "$GITHUB_ENV"
+          n=$(ls "$RUNNER_TEMP"/out/*.tsv | wc -l)
+          vides=$(python3 -I -c "import json,sys; m=json.load(open(sys.argv[1])); print(sum(1 for d in m['departements'].values() if d['lieux']==0))" "$RUNNER_TEMP/out/manifest.json")
+          echo "$n fichiers, $vides département(s) sans lieu"
+          test "$n" -eq 94
+          test "$vides" -le 5
+
+      - name: Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="lieux-$(date -u +%Y%m%d)-$GITHUB_RUN_NUMBER"
+          printf 'Lieux OpenStreetMap avec site ou e-mail, un fichier par département (format CSV Overpass, tabulations).\nExtrait Geofabrik du %s.\n\n© contributeurs OpenStreetMap — données sous licence ODbL 1.0 (https://opendatacommons.org/licenses/odbl/1-0/).\n' "$EXTRAIT" > "$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" "$RUNNER_TEMP"/out/*.tsv "$RUNNER_TEMP/out/manifest.json" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --latest
+          # 3 releases gardées (retour arrière possible) ; les plus anciennes sont supprimées avec leur étiquette.
+          gh release list --limit 100 --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[3:] | .[].tagName' | while read -r old; do
+            gh release delete "$old" --cleanup-tag --yes
+          done
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+
+      - name: État (garde la tâche active)
+        run: |
+          # Un dépôt public sans activité pendant 60 jours voit ses tâches planifiées désactivées : ce commit mensuel l'évite.
+          python3 -I - "$RUNNER_TEMP/out/manifest.json" <<'PY'
+          import json, os, sys
+          m = json.load(open(sys.argv[1], encoding='utf-8'))
+          e = {k: m[k] for k in ('genere', 'extrait_osm', 'lieux', 'hors_departement', 'ecartes')}
+          e['release'] = os.environ['TAG']
+          e['source_octets'] = int(os.environ['PBF_OCTETS'])
+          e['fichiers_octets'] = sum(d['octets'] for d in m['departements'].values())
+          e['plus_gros'] = max(m['departements'].items(), key=lambda kv: kv[1]['octets'])[0]
+          e['durees_s'] = {'telechargement': int(os.environ['D_TELECHARGEMENT']), 'filtre': int(os.environ['D_FILTRE']),
+                           'extraction': int(os.environ['D_EXTRACTION'])}
+          e['durees_s']['total'] = int(os.popen('date +%s').read()) - int(os.environ['T0'])
+          e['lieux_par_departement'] = {k: v['lieux'] for k, v in m['departements'].items()}
+          json.dump(e, open('etat.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+          print(json.dumps({k: v for k, v in e.items() if k != 'lieux_par_departement'}, ensure_ascii=False))
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add etat.json
+          git commit -m "Lieux OSM : $TAG"
+          git push
