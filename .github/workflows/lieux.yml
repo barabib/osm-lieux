@@ -44,8 +44,17 @@ jobs:
         working-directory: ${{ runner.temp }}
         run: |
           T=$(date +%s)
-          curl -fsSL --retry 3 --retry-delay 60 -A "$AGENT" -o france-latest.osm.pbf.md5 "$SOURCE.md5"
-          curl -fsSL --retry 3 --retry-delay 60 -A "$AGENT" -o france-latest.osm.pbf "$SOURCE"
+          # Diagnostic de connexion (IPv4 / IPv6, serveur de téléchargement / site) : lu dans le journal si le téléchargement échoue.
+          getent ahosts download.geofabrik.de | awk '{print $1}' | sort -u | tr '\n' ' '; echo
+          echo "IP du serveur GitHub : $(curl -s -4 -m 10 https://ifconfig.me || echo inconnue)"
+          for h in download.geofabrik.de www.geofabrik.de; do
+            for v in 4 6; do
+              printf '%s IPv%s : ' "$h" "$v"
+              curl -sS -$v -I -o /dev/null -m 15 -A "$AGENT" -w "HTTP %{http_code} (%{remote_ip})\n" "https://$h/" 2>&1 | tail -1 || true
+            done
+          done
+          curl -fsSL -4 --retry 3 --retry-connrefused --retry-delay 60 -A "$AGENT" -o france-latest.osm.pbf.md5 "$SOURCE.md5"
+          curl -fsSL -4 --retry 3 --retry-connrefused --retry-delay 60 -A "$AGENT" -o france-latest.osm.pbf "$SOURCE"
           md5sum -c france-latest.osm.pbf.md5
           echo "PBF_OCTETS=$(stat -c %s france-latest.osm.pbf)" >> "$GITHUB_ENV"
           echo "EXTRAIT=$(osmium fileinfo -g header.option.osmosis_replication_timestamp france-latest.osm.pbf)" >> "$GITHUB_ENV"
