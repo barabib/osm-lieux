@@ -1,0 +1,19 @@
+{
+ "genere": "2026-11-27T08:10:45Z",
+ "mois_afnic": "202610",
+ "source": "202610_OPENDATA_A-NomsDeDomaineEnPointFr.csv",
+ "comptes": {
+  "lignes": 10360977,
+  "actifs": 4738775,
+  "gardes": 4696991,
+  "sous_domaine": 7063,
+  "retires": 5622202,
+  "non_ascii": 34721
+ },
+ "zip_octets": 127416713,
+ "fichiers_octets": 32878937,
+ "durees_s": {
+  "telechargement": 8,
+  "empreintes": 15
+ }
+}
