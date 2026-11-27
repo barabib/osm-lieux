@@ -1,0 +1,91 @@
+name: Diagnostic Afnic (.fr)
+
+# Lecture du fichier A de l'Afnic (noms de domaine en .fr) pour en connaître le format réel.
+# Se lance quand ce fichier ou le script change, et à la main. Écrit diagnostic/afnic.txt (comptes, aucun domaine de particulier).
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/afnic-diag.yml
+      - scripts/afnic_diag.py
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: afnic-diag
+  cancel-in-progress: false
+
+jobs:
+  diag:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      AGENT: "barabib-osm-lieux/1.0 (+https://github.com/barabib/osm-lieux)"
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Recherche du fichier A
+        working-directory: ${{ runner.temp }}
+        run: |
+          set +e
+          R="$RUNNER_TEMP/recherche.txt"
+          : > "$R"
+          curl -fsSL -A "$AGENT" -m 60 -o ds.json "https://www.data.gouv.fr/api/1/datasets/open-data-du-fr-1/"
+          python3 -I - ds.json >> "$R" <<'PY'
+          import json, sys
+          d = json.load(open(sys.argv[1], encoding='utf-8'))
+          print('data.gouv.fr :', d.get('title'), '| maj', d.get('last_update'))
+          for r in d.get('resources', []):
+              print('ressource :', r.get('title'), '|', r.get('format'), '|', r.get('filesize'), '|', r.get('last_modified'), '|', r.get('url'))
+          PY
+          python3 -I -c "import json,sys; [print(r['url']) for r in json.load(open('ds.json')).get('resources', []) if (r.get('filesize') or 0) < 5000000]" > petites.txt
+          n=0
+          while read -r u; do
+            n=$((n+1))
+            curl -fsSL -A "$AGENT" -m 60 -o "res$n" "$u"
+            echo "--- $u : $(wc -c < "res$n") octets, début :" >> "$R"
+            head -c 1500 "res$n" | iconv -f cp1252 -t utf-8 >> "$R"; echo >> "$R"
+            grep -aoiE 'https?://[^";, <>]*NomsDeDomaine[^";, <>]*' "res$n" | sort -u >> liens.txt
+          done < petites.txt
+          for k in 0 1 2 3; do
+            ym=$(date -u -d "$(date -u +%Y-%m-15) -$k month" +%Y%m)
+            for base in https://www.afnic.fr/wp-media/ftp/documentsOpenData https://www.afnic.fr/data/opendata; do
+              echo "$base/${ym}_OPENDATA_A-NomsDeDomaineEnPointFr.zip" >> liens.txt
+            done
+          done
+          echo "--- candidats :" >> "$R"
+          URL=""
+          while read -r u; do
+            c=$(curl -sSIL -A "$AGENT" -m 30 -o /dev/null -w "%{http_code} %{size_download} %{content_type}" "$u" 2>&1 | tail -1)
+            echo "$u -> $c" >> "$R"
+            if [ -z "$URL" ] && [ "${c%% *}" = "200" ]; then URL="$u"; fi
+          done < <(awk '!seen[$0]++' liens.txt)
+          echo "retenu : ${URL:-aucun}" >> "$R"
+          echo "URL=$URL" >> "$GITHUB_ENV"
+          cat "$R"
+          exit 0
+
+      - name: Téléchargement et lecture
+        if: env.URL != ''
+        working-directory: ${{ runner.temp }}
+        run: |
+          T=$(date +%s)
+          curl -fsSL -A "$AGENT" --retry 3 --retry-delay 30 -o A.zip "$URL"
+          echo "téléchargé : $(stat -c %s A.zip) octets en $(( $(date +%s) - T )) s, sha256 $(sha256sum A.zip | cut -c1-16)…" >> recherche.txt
+          T=$(date +%s)
+          python3 -I "$GITHUB_WORKSPACE/scripts/afnic_diag.py" A.zip lecture.txt
+          echo "lecture : $(( $(date +%s) - T )) s" >> recherche.txt
+
+      - name: Rapport
+        if: always()
+        run: |
+          mkdir -p diagnostic
+          { echo "Diagnostic Afnic du $(date -u +%Y-%m-%dT%H:%M:%SZ) (passage $GITHUB_RUN_NUMBER)"; cat "$RUNNER_TEMP/recherche.txt" 2>/dev/null; echo; cat "$RUNNER_TEMP/lecture.txt" 2>/dev/null || echo "lecture : non faite"; } > diagnostic/afnic.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostic/afnic.txt
+          git commit -m "Diagnostic Afnic : passage $GITHUB_RUN_NUMBER"
+          git pull --rebase -q
+          git push
