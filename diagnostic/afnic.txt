@@ -1,0 +1,73 @@
+Diagnostic Afnic du 2026-11-27T08:07:45Z (passage 1)
+data.gouv.fr : Open data du .fr | maj 2026-11-27T05:55:02.090000+00:00
+ressource : Open data du .fr | csv | None | 2026-11-27T05:55:02.090492+00:00 | http://opendata.afnic.fr
+--- http://opendata.afnic.fr : 133878 octets, début :
+<!DOCTYPE html>
+<html class="no-js" lang="fr-FR">
+    <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link rel="profile" href="http://gmpg.org/xfn/11" />
+                    <link rel="pingback" href="" />
+        
+        <link rel="preload" as="font" href="/wp-sites/themes/afnic/assets/fonts/poppins/Poppins-Regular.woff2" type="font/woff2" crossorigin />
+        <link rel="preload" as="font" href="/wp-sites/themes/afnic/assets/fonts/poppins/Poppins-Medium.woff2" type="font/woff2" crossorigin />
+        <link rel="preload" as="font" href="/wp-sites/themes/afnic/assets/fonts/poppins/Poppins-Bold.woff2" type="font/woff2" crossorigin />
+        <link rel="preload" as="font" href="/wp-sites/themes/afnic/assets/fonts/zillaslab/ZillaSlab-Bold.woff2" type="font/woff2" crossorigin />
+        <link rel="preload" as="font" href="/wp-sites/themes/afnic/assets/fonts/zillaslab/ZillaSlab-Regular.woff2" type="font/woff2" crossorigin />
+
+        <link rel="apple-touch-icon-precomposed" sizes="57x57" href="/wp-sites/themes/afnic/assets/favicon/apple-touch-icon-57x57.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="114x114" href="/wp-sites/themes/afnic/assets/favicon/apple-touch-icon-114x114.png" />
+        <link rel="apple-touch-icon-precomposed" sizes="72x72" href="/wp-sites/themes/afnic/assets/favicon/apple-touch-icon-72
+--- candidats :
+https://www.afnic.fr/wp-media/ftp/documentsOpenData/202610_OPENDATA_A-NomsDeDomaineEnPointFr.zip -> 200 0 application/zip
+https://www.afnic.fr/wp-media/ftp/documentsOpenData/202610_OPENDATA_D-NbDeNomsDeDomainesParCodePostalDuPointFr.zip -> 200 0 application/zip
+https://www.afnic.fr/wp-media/ftp/documentsOpenData/202611_OPENDATA_A-NomsDeDomaineEnPointFr.zip -> 404 0 text/html; charset=UTF-8
+https://www.afnic.fr/data/opendata/202611_OPENDATA_A-NomsDeDomaineEnPointFr.zip -> 404 0 text/html; charset=iso-8859-1
+https://www.afnic.fr/data/opendata/202610_OPENDATA_A-NomsDeDomaineEnPointFr.zip -> 404 0 text/html; charset=iso-8859-1
+https://www.afnic.fr/wp-media/ftp/documentsOpenData/202609_OPENDATA_A-NomsDeDomaineEnPointFr.zip -> 200 0 application/zip
+https://www.afnic.fr/data/opendata/202609_OPENDATA_A-NomsDeDomaineEnPointFr.zip -> 404 0 text/html; charset=iso-8859-1
+https://www.afnic.fr/wp-media/ftp/documentsOpenData/202608_OPENDATA_A-NomsDeDomaineEnPointFr.zip -> 200 0 application/zip
+https://www.afnic.fr/data/opendata/202608_OPENDATA_A-NomsDeDomaineEnPointFr.zip -> 404 0 text/html; charset=iso-8859-1
+retenu : https://www.afnic.fr/wp-media/ftp/documentsOpenData/202610_OPENDATA_A-NomsDeDomaineEnPointFr.zip
+téléchargé : 127416713 octets en 8 s, sha256 8d541b1cb11120d8…
+lecture : 16 s
+
+membre : 202610_OPENDATA_A-NomsDeDomaineEnPointFr.csv | 127416511 octets compressés | 719214110 octets
+encodage probable (4 premiers Mo) : utf-8
+BOM UTF-8 : False
+fins de ligne CRLF : False
+séparateur : ';'
+en-tête (12 colonnes) :
+   0 "Nom de domaine"
+   1 "Pays BE"
+   2 "Departement BE"
+   3 "Ville BE"
+   4 "Nom BE"
+   5 "Sous domaine"
+   6 "Type du titulaire"
+   7 "Pays titulaire"
+   8 "Departement titulaire"
+   9 "Domaine IDN"
+  10 "Date de création"
+  11 "Date de retrait du WHOIS"
+colonnes repérées : domaine=0 type=6 pays=7 dep=8 retrait=11 creation=10 sous=5
+lignes de données : 10360977
+nombre de champs par ligne : {12: 10360977}
+3 premières lignes brutes (type de titulaire masqué si particulier) :
+  [ligne de particulier non recopiée]
+  [ligne de particulier non recopiée]
+  [ligne de particulier non recopiée]
+type du titulaire : {'': 10359943, 'ORG': 556, 'PERSON': 478}
+pays titulaire : {'': 10359943, 'autre': 500, 'FR': 534}
+sous-domaine : {'fr': 10345034, 'asso.fr': 5674, 'com.fr': 4986, 'tm.fr': 3238, 'gouv.fr': 1227, 'nom.fr': 685}
+date de retrait vide (domaine actif) : 4738775
+exemples de date de retrait : ['05-12-2025', '19-01-2017', '14-05-2022', '10-11-2024', '25-03-2025']
+date de création : de 01-01-1995 à 31-12-2025
+actifs, personne morale, pays FR : 0
+départements (actifs, personne morale, FR) : 0 valeurs distinctes
+exemples 17 : 
+exemples 69 : 
+exemples 75 : 
