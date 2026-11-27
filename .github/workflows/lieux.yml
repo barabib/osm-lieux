@@ -89,8 +89,9 @@ jobs:
           TAG="lieux-$(date -u +%Y%m%d)-$GITHUB_RUN_NUMBER"
           printf 'Lieux OpenStreetMap avec site ou e-mail, un fichier par département (format CSV Overpass, tabulations).\nExtrait Geofabrik du %s.\n\n© contributeurs OpenStreetMap — données sous licence ODbL 1.0 (https://opendatacommons.org/licenses/odbl/1-0/).\n' "$EXTRAIT" > "$RUNNER_TEMP/notes.md"
           gh release create "$TAG" "$RUNNER_TEMP"/out/*.tsv "$RUNNER_TEMP/out/manifest.json" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --latest
-          # 3 releases gardées (retour arrière possible) ; les plus anciennes sont supprimées avec leur étiquette.
-          gh release list --limit 100 --json tagName,createdAt --jq 'sort_by(.createdAt) | reverse | .[3:] | .[].tagName' | while read -r old; do
+          # 3 releases de lieux gardées (retour arrière possible) ; les plus anciennes sont supprimées avec leur étiquette.
+          # Seules les releases « lieux-… » sont comptées : la release fixe « domaines » (domaines.yml) n'est jamais touchée.
+          gh release list --limit 100 --json tagName,createdAt --jq '[.[] | select(.tagName | startswith("lieux-"))] | sort_by(.createdAt) | reverse | .[3:] | .[].tagName' | while read -r old; do
             gh release delete "$old" --cleanup-tag --yes
           done
           echo "TAG=$TAG" >> "$GITHUB_ENV"

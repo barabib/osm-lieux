@@ -24,3 +24,11 @@ Les données viennent d'OpenStreetMap. © contributeurs OpenStreetMap, sous lice
 ## Banc
 
 `bash banc/banc.sh` : fabrique un petit fichier OSM, lui applique le même filtre et la même extraction, puis vérifie le résultat. Il n'utilise pas le réseau. Prérequis : `osmium-tool`, puis `pip install osmium==4.3.2 shapely==2.2.0`.
+
+## Domaines .fr (Afnic)
+
+Une fois par mois, la tâche `.github/workflows/domaines.yml` télécharge le fichier A de l'open data Afnic (noms de domaine en .fr, Licence Ouverte Etalab) et publie, dans la release fixe `domaines` (jamais « latest »), une empreinte de chaque domaine actif directement sous .fr : SHA-1 du libellé sans « .fr », en 16 fichiers `fr-0.bin` à `fr-f.bin` selon le premier chiffre hexadécimal, enregistrements triés de 7 octets (octets 1 à 7 de l'empreinte). `domaines.json` donne le mois, les comptes et le sha256 de chaque fichier ; `etat-domaines.json` garde le bilan du dernier passage.
+
+Le fichier A ne donne ni titulaire ni département (colonnes vides sur plus de 99,9 % des lignes : `diagnostic/afnic.txt`, 27/11/2026). derf_prospect construit des noms de domaine à partir du nom des établissements et vérifie seulement leur existence ; le site n'est gardé que s'il porte le SIREN ou le code postal de l'établissement.
+
+Adresse : `https://github.com/barabib/osm-lieux/releases/download/domaines/domaines.json`. Banc : `python3 -I banc/banc_domaines.py`.

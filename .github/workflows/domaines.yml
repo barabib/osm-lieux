@@ -1,0 +1,95 @@
+name: Domaines .fr (Afnic)
+
+# Une fois par mois (le 18, 04:23 UTC : l'Afnic publie vers le 15 le fichier du mois précédent), à la main,
+# et quand ce fichier ou le script change. Publie les empreintes des domaines .fr actifs dans la release fixe « domaines »
+# (jamais « latest » : derf_prospect lit les lieux OSM par releases/latest).
+on:
+  schedule:
+    - cron: "23 4 18 * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/domaines.yml
+      - scripts/domaines.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: domaines
+  cancel-in-progress: false
+
+jobs:
+  domaines:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      AGENT: "barabib-osm-lieux/1.0 (+https://github.com/barabib/osm-lieux)"
+      BASE: https://www.afnic.fr/wp-media/ftp/documentsOpenData
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Banc (hors ligne)
+        run: python3 -I banc/banc_domaines.py
+
+      - name: Téléchargement du fichier A
+        working-directory: ${{ runner.temp }}
+        run: |
+          T=$(date +%s)
+          for k in 1 2 3; do
+            ym=$(date -u -d "$(date -u +%Y-%m-15) -$k month" +%Y%m)
+            if curl -fsSL -A "$AGENT" --retry 3 --retry-delay 30 -o A.zip "$BASE/${ym}_OPENDATA_A-NomsDeDomaineEnPointFr.zip"; then
+              echo "MOIS=$ym" >> "$GITHUB_ENV"; break
+            fi
+            rm -f A.zip
+          done
+          test -s A.zip
+          unzip -tq A.zip
+          echo "ZIP_OCTETS=$(stat -c %s A.zip)" >> "$GITHUB_ENV"
+          echo "D_TELECHARGEMENT=$(( $(date +%s) - T ))" >> "$GITHUB_ENV"
+
+      - name: Empreintes
+        run: |
+          T=$(date +%s)
+          python3 -I scripts/domaines.py "$RUNNER_TEMP/A.zip" "$RUNNER_TEMP/out" "$MOIS"
+          echo "D_EMPREINTES=$(( $(date +%s) - T ))" >> "$GITHUB_ENV"
+          python3 -I - "$RUNNER_TEMP/out/domaines.json" <<'PY'
+          import json, sys
+          m = json.load(open(sys.argv[1], encoding='utf-8'))
+          n = m['comptes']['gardes']
+          print(n, 'domaines gardés')
+          assert n > 2000000, 'trop peu de domaines : fichier Afnic suspect'
+          assert len(m['fichiers']) == 16
+          PY
+
+      - name: Release « domaines »
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view domaines >/dev/null 2>&1; then
+            printf 'Empreintes des noms de domaine .fr actifs (fichier A « Noms de domaine en .fr », open data Afnic, Licence Ouverte Etalab).\nMise à jour mensuelle. Format : voir scripts/domaines.py.\n' > "$RUNNER_TEMP/notes.md"
+            gh release create domaines --title "Domaines .fr (Afnic)" --notes-file "$RUNNER_TEMP/notes.md" --latest=false
+          fi
+          # Fichiers d'abord, manifeste en dernier : un lecteur qui voit le nouveau manifeste trouve les nouveaux fichiers (sha256 contrôlés).
+          gh release upload domaines "$RUNNER_TEMP"/out/fr-*.bin --clobber
+          gh release upload domaines "$RUNNER_TEMP/out/domaines.json" --clobber
+
+      - name: État
+        run: |
+          python3 -I - "$RUNNER_TEMP/out/domaines.json" <<'PY'
+          import json, os, sys
+          m = json.load(open(sys.argv[1], encoding='utf-8'))
+          e = {k: m[k] for k in ('genere', 'mois_afnic', 'source', 'comptes')}
+          e['zip_octets'] = int(os.environ['ZIP_OCTETS'])
+          e['fichiers_octets'] = sum(f['octets'] for f in m['fichiers'].values())
+          e['durees_s'] = {'telechargement': int(os.environ['D_TELECHARGEMENT']), 'empreintes': int(os.environ['D_EMPREINTES'])}
+          json.dump(e, open('etat-domaines.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+          print(json.dumps(e, ensure_ascii=False))
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add etat-domaines.json
+          git commit -m "Domaines .fr : Afnic $MOIS"
+          git pull --rebase -q
+          git push
